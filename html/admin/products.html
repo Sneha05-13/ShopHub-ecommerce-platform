@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Management - ShopHub</title>
+    <link rel="stylesheet" href="../../css/admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>ShopHub Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="products.html" class="nav-item active">
+                    <span>📦</span> Products
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <span>🛒</span> Orders
+                </a>
+                <a href="sales-reports.html" class="nav-item">
+                    <span>📈</span> Sales Reports
+                </a>
+                <a href="../../index.html" class="nav-item">
+                    <span>🏠</span> Back to Store
+                </a>
+                <a href="#" class="nav-item" id="admin-logout">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1>Products Management</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="add-product-btn">Add New Product</button>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Report Buttons -->
+                <div class="admin-section">
+                    <h2>Reports</h2>
+                    <div class="report-buttons">
+                        <button class="btn btn-secondary" onclick="productsReports.generateProductsReport('csv')">
+                            📦 All Products (CSV)
+                        </button>
+                        <button class="btn btn-secondary" onclick="productsReports.generateProductsReport('pdf')">
+                            📄 All Products (PDF)
+                        </button>
+                        <button class="btn btn-secondary" onclick="productsReports.generateLowStockReport('csv')">
+                            ⚠️ Low Stock (CSV)
+                        </button>
+                        <button class="btn btn-secondary" onclick="productsReports.generateLowStockReport('pdf')">
+                            📄 Low Stock (PDF)
+                        </button>
+                    </div>
+                </div>
+                <!-- Products Table -->
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table">
+                            <!-- Products will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Add Product</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group">
+                    <label for="product-name">Product Name</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Description</label>
+                    <textarea id="product-description" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Category</label>
+                    <select id="product-category" required>
+                        <option value="">Select a category</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="home">Home & Garden</option>
+                        <option value="books">Books</option>
+                        <option value="sports">Sports</option>
+                        <option value="stationary">Stationary</option>
+                        <option value="beauty">Beauty</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Price ($)</label>
+                    <input type="number" id="product-price" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-stock">Stock Quantity</label>
+                    <input type="number" id="product-stock" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">Product Image URL</label>
+                    <input type="text" id="product-image" placeholder="Enter image URL or upload">
+                </div>
+                <div class="form-group">
+                    <label for="product-image-file">Or Upload Image</label>
+                    <input type="file" id="product-image-file" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Product</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="../../js/firebase-config.js"></script>
+    <script src="../../js/admin/admin-auth.js"></script>
+    <script src="../../js/admin/products.js"></script>
+    <script src="../../js/admin/report-generator.js"></script>
+</body>
+</html>

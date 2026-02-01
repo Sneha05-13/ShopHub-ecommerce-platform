@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - ShopHub</title>
+    <link rel="stylesheet" href="../../css/admin-login-styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h2>ShopHub</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="../../index.html">Back to Store</a></li>
+                <li><a href="#" class="active">Admin Login</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="admin-login-page">
+        <div class="login-container">
+            <h1>Admin Login</h1>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-email">Email</label>
+                    <input type="email" id="admin-email" required placeholder="Enter admin email">
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="../../js/firebase-config.js"></script>
+    <script src="../../js/admin/admin-login.js"></script>
+</body>
+</html>

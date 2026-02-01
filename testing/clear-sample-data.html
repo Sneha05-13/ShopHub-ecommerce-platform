@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Sample Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .danger { background: #dc3545; color: white; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Clear Sample Data</h1>
+        
+        <div id="status" class="status info">
+            Ready to clear sample data...
+        </div>
+        
+        <div class="section">
+            <h3>⚠️ Warning: This action cannot be undone!</h3>
+            <p>This will permanently delete all sample data from your Firebase database including:</p>
+            <ul>
+                <li>📦 All Products</li>
+                <li>🛒 All Orders</li>
+                <li>👥 All Sample Customers</li>
+            </ul>
+            <p><strong>Admin users will NOT be deleted.</strong></p>
+        </div>
+        
+        <div>
+            <button onclick="checkData()">Check Current Data</button>
+            <button onclick="clearProducts()" class="danger">Clear Products</button>
+            <button onclick="clearOrders()" class="danger">Clear Orders</button>
+            <button onclick="clearSampleCustomers()" class="danger">Clear Sample Customers</button>
+            <button onclick="clearAllData()" class="danger">Clear All Sample Data</button>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfo7mj_kEFklzaB81x9YcuMim14rnZULU",
+            authDomain: "e-commerce-app-f265d.firebaseapp.com",
+            projectId: "e-commerce-app-f265d",
+            storageBucket: "e-commerce-app-f265d.firebasestorage.app",
+            messagingSenderId: "927599274842",
+            appId: "1:927599274842:web:37ea0993336bc879d82163",
+            measurementId: "G-5KN3XX4QWX"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function checkData() {
+            log('🔍 Checking current data...');
+            updateStatus('Checking data...', 'info');
+            
+            try {
+                // Check products
+                const productsSnapshot = await db.collection('products').get();
+                log(`📦 Products: ${productsSnapshot.size} items`);
+                
+                // Check orders
+                const ordersSnapshot = await db.collection('orders').get();
+                log(`🛒 Orders: ${ordersSnapshot.size} items`);
+                
+                // Check users
+                const usersSnapshot = await db.collection('users').get();
+                let customerCount = 0;
+                let adminCount = 0;
+                
+                usersSnapshot.forEach(doc => {
+                    const role = doc.data().role;
+                    if (role === 'admin') {
+                        adminCount++;
+                    } else if (role === 'customer') {
+                        customerCount++;
+                    }
+                });
+                
+                log(`👥 Users: ${usersSnapshot.size} total (${adminCount} admins, ${customerCount} customers)`);
+                
+                updateStatus('Data check complete', 'success');
+                
+            } catch (error) {
+                log(`❌ Error checking data: ${error.message}`);
+                updateStatus(`Error checking data: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearProducts() {
+            if (!confirm('Are you sure you want to delete ALL products? This cannot be undone!')) {
+                return;
+            }
+            
+            log('🗑️ Clearing all products...');
+            updateStatus('Clearing products...', 'warning');
+            
+            try {
+                const productsSnapshot = await db.collection('products').get();
+                let deleteCount = 0;
+                
+                for (const doc of productsSnapshot.docs) {
+                    await db.collection('products').doc(doc.id).delete();
+                    deleteCount++;
+                }
+                
+                log(`✅ Deleted ${deleteCount} products`);
+                updateStatus('Products cleared successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing products: ${error.message}`);
+                updateStatus(`Error clearing products: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearOrders() {
+            if (!confirm('Are you sure you want to delete ALL orders? This cannot be undone!')) {
+                return;
+            }
+            
+            log('🗑️ Clearing all orders...');
+            updateStatus('Clearing orders...', 'warning');
+            
+            try {
+                const ordersSnapshot = await db.collection('orders').get();
+                let deleteCount = 0;
+                
+                for (const doc of ordersSnapshot.docs) {
+                    await db.collection('orders').doc(doc.id).delete();
+                    deleteCount++;
+                }
+                
+                log(`✅ Deleted ${deleteCount} orders`);
+                updateStatus('Orders cleared successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing orders: ${error.message}`);
+                updateStatus(`Error clearing orders: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearSampleCustomers() {
+            if (!confirm('Are you sure you want to delete ALL sample customers? This cannot be undone!')) {
+                return;
+            }
+            
+            log('🗑️ Clearing sample customers...');
+            updateStatus('Clearing sample customers...', 'warning');
+            
+            try {
+                const usersSnapshot = await db.collection('users')
+                    .where('role', '==', 'customer')
+                    .get();
+                
+                let deleteCount = 0;
+                
+                for (const doc of usersSnapshot.docs) {
+                    await db.collection('users').doc(doc.id).delete();
+                    deleteCount++;
+                }
+                
+                log(`✅ Deleted ${deleteCount} sample customers`);
+                updateStatus('Sample customers cleared successfully', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing customers: ${error.message}`);
+                updateStatus(`Error clearing customers: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearAllData() {
+            if (!confirm('⚠️ DANGER: This will delete ALL products, orders, and sample customers!\\n\\nThis action cannot be undone.\\n\\nAre you absolutely sure?')) {
+                return;
+            }
+            
+            log('🗑️ Clearing ALL sample data...');
+            updateStatus('Clearing all data...', 'warning');
+            
+            try {
+                let totalDeleted = 0;
+                
+                // Clear products
+                const productsSnapshot = await db.collection('products').get();
+                for (const doc of productsSnapshot.docs) {
+                    await db.collection('products').doc(doc.id).delete();
+                    totalDeleted++;
+                }
+                log(`✅ Deleted ${productsSnapshot.size} products`);
+                
+                // Clear orders
+                const ordersSnapshot = await db.collection('orders').get();
+                for (const doc of ordersSnapshot.docs) {
+                    await db.collection('orders').doc(doc.id).delete();
+                    totalDeleted++;
+                }
+                log(`✅ Deleted ${ordersSnapshot.size} orders`);
+                
+                // Clear sample customers (not admins)
+                const usersSnapshot = await db.collection('users')
+                    .where('role', '==', 'customer')
+                    .get();
+                for (const doc of usersSnapshot.docs) {
+                    await db.collection('users').doc(doc.id).delete();
+                    totalDeleted++;
+                }
+                log(`✅ Deleted ${usersSnapshot.size} sample customers`);
+                
+                log(`\\n🎉 Total items deleted: ${totalDeleted}`);
+                updateStatus('All sample data cleared successfully!', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing data: ${error.message}`);
+                updateStatus(`Error clearing data: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        log('🗑️ Sample Data Clear Tool Ready');
+        updateStatus('Ready to clear sample data', 'info');
+        
+        // Auto-check on load
+        setTimeout(checkData, 1000);
+    </script>
+</body>
+</html>

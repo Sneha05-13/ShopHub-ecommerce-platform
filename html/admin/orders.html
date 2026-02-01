@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - ShopHub</title>
+    <link rel="stylesheet" href="../../css/admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <h2>ShopHub Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-item">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="products.html" class="nav-item">
+                    <span>📦</span> Products
+                </a>
+                <a href="orders.html" class="nav-item active">
+                    <span>🛒</span> Orders
+                </a>
+                <a href="sales-reports.html" class="nav-item">
+                    <span>📈</span> Sales Reports
+                </a>
+                <a href="../../index.html" class="nav-item">
+                    <span>🏠</span> Back to Store
+                </a>
+                <a href="#" class="nav-item" id="admin-logout">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <h1>Orders Management</h1>
+            </header>
+
+            <div class="admin-content">
+                <!-- Report Buttons -->
+                <div class="admin-section">
+                    <h2>Reports</h2>
+                    <div class="report-buttons">
+                        <button class="btn btn-secondary" onclick="ordersReports.generateOrdersReport('csv')">
+                            📋 All Orders (CSV)
+                        </button>
+                        <button class="btn btn-secondary" onclick="ordersReports.generateOrdersReport('pdf')">
+                            📄 All Orders (PDF)
+                        </button>
+                        <button class="btn btn-secondary" onclick="ordersReports.generateOrdersByStatusReport('csv')">
+                            📊 Orders by Status (CSV)
+                        </button>
+                        <button class="btn btn-secondary" onclick="ordersReports.generateOrdersByStatusReport('pdf')">
+                            📄 Orders by Status (PDF)
+                        </button>
+                    </div>
+                </div>
+                <!-- Orders Table -->
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table">
+                            <!-- Orders will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Order Details</h2>
+            <div id="order-details">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="../../js/firebase-config.js"></script>
+    <script src="../../js/admin/admin-auth.js"></script>
+    <script src="../../js/admin/orders.js"></script>
+    <script src="../../js/admin/report-generator.js"></script>
+</body>
+</html>

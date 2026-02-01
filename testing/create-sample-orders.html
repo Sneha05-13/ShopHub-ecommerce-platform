@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Sample Orders</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Sample Orders for Admin Panel</h1>
+        
+        <div id="status" class="status info">
+            Ready to create sample orders...
+        </div>
+        
+        <div>
+            <button onclick="createSampleOrders()">Create Sample Orders</button>
+            <button onclick="checkOrders()">Check Orders Status</button>
+            <button onclick="clearOrders()">Clear All Orders</button>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfo7mj_kEFklzaB81x9YcuMim14rnZULU",
+            authDomain: "e-commerce-app-f265d.firebaseapp.com",
+            projectId: "e-commerce-app-f265d",
+            storageBucket: "e-commerce-app-f265d.firebasestorage.app",
+            messagingSenderId: "927599274842",
+            appId: "1:927599274842:web:37ea0993336bc879d82163",
+            measurementId: "G-5KN3XX4QWX"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Sample customer data
+        const sampleCustomers = [
+            { name: 'John Doe', email: 'john@example.com', phone: '+1234567890', address: '123 Main St, City, State 12345' },
+            { name: 'Jane Smith', email: 'jane@example.com', phone: '+0987654321', address: '456 Oak Ave, Town, State 67890' },
+            { name: 'Bob Johnson', email: 'bob@example.com', phone: '+1122334455', address: '789 Pine Rd, Village, State 13579' }
+        ];
+
+        // Valid categories for sample orders
+        const validCategories = ['electronics', 'clothing', 'home', 'books', 'sports', 'stationary', 'beauty'];
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function createSampleOrders() {
+            log('Creating sample orders...');
+            updateStatus('Creating sample orders...', 'info');
+            
+            try {
+                // Get available products
+                const productsSnapshot = await db.collection('products').get();
+                if (productsSnapshot.empty) {
+                    log('❌ No products found. Please upload products first.');
+                    updateStatus('No products found', 'error');
+                    return;
+                }
+
+                const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(product => validCategories.includes(product.category));
+                
+                // Create sample customers first
+                const customerIds = [];
+                for (const customer of sampleCustomers) {
+                    try {
+                        // Check if customer already exists
+                        const existingUser = await db.collection('users')
+                            .where('email', '==', customer.email)
+                            .get();
+                        
+                        let customerId;
+                        if (existingUser.empty) {
+                            // Create new customer
+                            const newUser = {
+                                name: customer.name,
+                                email: customer.email,
+                                role: 'customer',
+                                phone: customer.phone,
+                                address: customer.address,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+                            
+                            const userDoc = await db.collection('users').add(newUser);
+                            customerId = userDoc.id;
+                            log(`✅ Created customer: ${customer.name}`);
+                        } else {
+                            customerId = existingUser.docs[0].id;
+                            log(`ℹ️ Using existing customer: ${customer.name}`);
+                        }
+                        customerIds.push({ id: customerId, ...customer });
+                    } catch (error) {
+                        log(`❌ Error creating customer ${customer.name}: ${error.message}`);
+                    }
+                }
+
+                // Create sample orders
+                const orderCount = 15;
+                const statuses = ['pending', 'completed', 'cancelled'];
+                
+                for (let i = 0; i < orderCount; i++) {
+                    try {
+                        const customer = customerIds[Math.floor(Math.random() * customerIds.length)];
+                        const numItems = Math.floor(Math.random() * 3) + 1; // 1-3 items per order
+                        
+                        // Select random products
+                        const selectedProducts = [];
+                        const usedIndices = new Set();
+                        
+                        while (selectedProducts.length < numItems && selectedProducts.length < products.length) {
+                            const randomIndex = Math.floor(Math.random() * products.length);
+                            if (!usedIndices.has(randomIndex)) {
+                                usedIndices.add(randomIndex);
+                                const product = products[randomIndex];
+                                const quantity = Math.floor(Math.random() * 3) + 1; // 1-3 quantity
+                                
+                                selectedProducts.push({
+                                    productId: product.id,
+                                    name: product.name,
+                                    price: product.price,
+                                    quantity: quantity
+                                });
+                            }
+                        }
+                        
+                        // Calculate totals
+                        const subtotal = selectedProducts.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                        const tax = subtotal * 0.08; // 8% tax
+                        const total = subtotal + tax;
+                        
+                        // Create order with random date in last 30 days
+                        const daysAgo = Math.floor(Math.random() * 30);
+                        const orderDate = new Date();
+                        orderDate.setDate(orderDate.getDate() - daysAgo);
+                        
+                        const order = {
+                            userId: customer.id,
+                            userEmail: customer.email,
+                            items: selectedProducts,
+                            subtotal: subtotal,
+                            tax: tax,
+                            total: total,
+                            status: statuses[Math.floor(Math.random() * statuses.length)],
+                            createdAt: firebase.firestore.Timestamp.fromDate(orderDate)
+                        };
+                        
+                        await db.collection('orders').add(order);
+                        log(`✅ Created order #${i + 1} for ${customer.name} - ${formatCurrency(total)}`);
+                        
+                    } catch (error) {
+                        log(`❌ Error creating order #${i + 1}: ${error.message}`);
+                    }
+                }
+                
+                log(`\n✅ Sample orders creation complete!`);
+                updateStatus('Sample orders created successfully!', 'success');
+                
+            } catch (error) {
+                log(`❌ Failed to create sample orders: ${error.message}`);
+                updateStatus(`Failed to create orders: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkOrders() {
+            log('Checking orders status...');
+            updateStatus('Checking orders...', 'info');
+            
+            try {
+                const ordersSnapshot = await db.collection('orders').get();
+                log(`📊 Total Orders: ${ordersSnapshot.size}`);
+                
+                if (ordersSnapshot.size > 0) {
+                    let totalRevenue = 0;
+                    const statusCounts = {};
+                    
+                    ordersSnapshot.forEach(doc => {
+                        const order = doc.data();
+                        totalRevenue += order.total || 0;
+                        
+                        const status = order.status || 'unknown';
+                        statusCounts[status] = (statusCounts[status] || 0) + 1;
+                    });
+                    
+                    log(`💰 Total Revenue: ${formatCurrency(totalRevenue)}`);
+                    log(`📈 Order Statuses:`);
+                    Object.entries(statusCounts).forEach(([status, count]) => {
+                        log(`   ${status}: ${count}`);
+                    });
+                    
+                    // Show recent orders
+                    log(`\n📋 Recent Orders:`);
+                    const recentOrders = ordersSnapshot.docs
+                        .sort((a, b) => {
+                            let aTime = 0, bTime = 0;
+                            try {
+                                const aCreatedAt = a.data().createdAt;
+                                if (aCreatedAt && typeof aCreatedAt.toDate === 'function') {
+                                    aTime = aCreatedAt.toDate().getTime();
+                                } else if (aCreatedAt && aCreatedAt instanceof Date) {
+                                    aTime = aCreatedAt.getTime();
+                                } else if (typeof aCreatedAt === 'number') {
+                                    aTime = aCreatedAt;
+                                }
+                            } catch (e) {
+                                console.log('Error parsing aTime:', e);
+                            }
+                            
+                            try {
+                                const bCreatedAt = b.data().createdAt;
+                                if (bCreatedAt && typeof bCreatedAt.toDate === 'function') {
+                                    bTime = bCreatedAt.toDate().getTime();
+                                } else if (bCreatedAt && bCreatedAt instanceof Date) {
+                                    bTime = bCreatedAt.getTime();
+                                } else if (typeof bCreatedAt === 'number') {
+                                    bTime = bCreatedAt;
+                                }
+                            } catch (e) {
+                                console.log('Error parsing bTime:', e);
+                            }
+                            
+                            return bTime - aTime;
+                        })
+                        .slice(0, 5);
+                    
+                    recentOrders.forEach(doc => {
+                        const order = doc.data();
+                        let date = 'N/A';
+                        try {
+                            if (order.createdAt && typeof order.createdAt.toDate === 'function') {
+                                date = order.createdAt.toDate().toLocaleDateString();
+                            } else if (order.createdAt instanceof Date) {
+                                date = order.createdAt.toLocaleDateString();
+                            }
+                        } catch (e) {
+                            console.log('Error parsing date:', e);
+                        }
+                        log(`   #${doc.id.substring(0, 8)} - ${order.userEmail} - ${formatCurrency(order.total)} - ${order.status} (${date})`);
+                    });
+                }
+                
+                updateStatus('Orders check complete', 'success');
+                
+            } catch (error) {
+                log(`❌ Error checking orders: ${error.message}`);
+                updateStatus(`Error checking orders: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearOrders() {
+            if (!confirm('Are you sure you want to delete all orders? This cannot be undone.')) {
+                return;
+            }
+            
+            log('Clearing all orders...');
+            updateStatus('Clearing orders...', 'info');
+            
+            try {
+                const ordersSnapshot = await db.collection('orders').get();
+                let deleteCount = 0;
+                
+                for (const doc of ordersSnapshot.docs) {
+                    await db.collection('orders').doc(doc.id).delete();
+                    deleteCount++;
+                }
+                
+                log(`✅ Deleted ${deleteCount} orders`);
+                updateStatus('All orders cleared', 'success');
+                
+            } catch (error) {
+                log(`❌ Error clearing orders: ${error.message}`);
+                updateStatus(`Error clearing orders: ${error.message}`, 'error');
+            }
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+
+        // Initialize
+        log('Sample Orders Tool Ready');
+        updateStatus('Ready to create sample orders for testing admin panel', 'info');
+    </script>
+</body>
+</html>

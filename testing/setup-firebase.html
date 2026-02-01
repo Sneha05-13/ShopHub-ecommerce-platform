@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Setup</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Firebase Setup for E-Commerce App</h1>
+        
+        <div id="status" class="status info">
+            Initializing Firebase setup...
+        </div>
+        
+        <div>
+            <button onclick="testConnection()">Test Firebase Connection</button>
+            <button onclick="uploadSampleData()">Upload Sample Products</button>
+            <button onclick="createTestUser()">Create Test Admin User</button>
+            <button onclick="checkData()">Check Data Status</button>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfo7mj_kEFklzaB81x9YcuMim14rnZULU",
+            authDomain: "e-commerce-app-f265d.firebaseapp.com",
+            projectId: "e-commerce-app-f265d",
+            storageBucket: "e-commerce-app-f265d.firebasestorage.app",
+            messagingSenderId: "927599274842",
+            appId: "1:927599274842:web:37ea0993336bc879d82163",
+            measurementId: "G-5KN3XX4QWX"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Sample Products Data
+        const sampleProducts = [
+            {
+                name: "Wireless Bluetooth Headphones",
+                description: "High-quality wireless headphones with noise cancellation and 20-hour battery life. Perfect for music lovers and professionals.",
+                category: "electronics",
+                price: 79.99,
+                stock: 50,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500"
+            },
+            {
+                name: "Smart Watch Series 5",
+                description: "Advanced fitness tracker with heart rate monitor, GPS, and water resistance. Stay connected on the go.",
+                category: "electronics",
+                price: 299.99,
+                stock: 30,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500"
+            },
+            {
+                name: "Men's Classic T-Shirt",
+                description: "Comfortable 100% cotton t-shirt available in multiple colors. Perfect for casual wear.",
+                category: "clothing",
+                price: 19.99,
+                stock: 100,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500"
+            },
+            {
+                name: "Women's Running Shoes",
+                description: "Lightweight and breathable running shoes with excellent cushioning. Ideal for daily workouts.",
+                category: "sports",
+                price: 89.99,
+                stock: 45,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500"
+            },
+            {
+                name: "Modern Table Lamp",
+                description: "Stylish LED desk lamp with adjustable brightness and USB charging port. Perfect for your home office.",
+                category: "home",
+                price: 45.99,
+                stock: 25,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500"
+            },
+            {
+                name: "The Art of Programming",
+                description: "Comprehensive guide to modern software development. Essential reading for developers.",
+                category: "books",
+                price: 34.99,
+                stock: 60,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=500"
+            },
+            {
+                name: "Yoga Mat Premium",
+                description: "Non-slip yoga mat with extra cushioning. Perfect for yoga, pilates, and stretching exercises.",
+                category: "sports",
+                price: 29.99,
+                stock: 80,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=500"
+            },
+            {
+                name: "Building Blocks Set",
+                description: "Creative building blocks set with 500 pieces. Great for developing motor skills and creativity.",
+                category: "toys",
+                price: 39.99,
+                stock: 40,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=500"
+            },
+            {
+                name: "Face Care Kit",
+                description: "Complete skincare set with cleanser, toner, and moisturizer. Suitable for all skin types.",
+                category: "beauty",
+                price: 49.99,
+                stock: 35,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500"
+            },
+            {
+                name: "Organic Coffee Beans",
+                description: "Premium organic coffee beans from Colombia. Rich flavor and smooth finish.",
+                category: "food",
+                price: 24.99,
+                stock: 100,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500"
+            },
+            {
+                name: "Laptop Stand Aluminum",
+                description: "Ergonomic laptop stand made from premium aluminum. Improves posture and reduces neck strain.",
+                category: "electronics",
+                price: 54.99,
+                stock: 50,
+                featured: true,
+                imageUrl: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500"
+            },
+            {
+                name: "Women's Winter Jacket",
+                description: "Warm and stylish winter jacket with water-resistant material. Perfect for cold weather.",
+                category: "clothing",
+                price: 129.99,
+                stock: 25,
+                featured: false,
+                imageUrl: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=500"
+            }
+        ];
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function testConnection() {
+            log('Testing Firebase connection...');
+            try {
+                // Test Firestore connection
+                const testDoc = await db.collection('test').doc('connection').set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    test: true
+                });
+                
+                // Clean up test document
+                await db.collection('test').doc('connection').delete();
+                
+                log('✅ Firebase connection successful!');
+                updateStatus('Firebase connection successful!', 'success');
+            } catch (error) {
+                log(`❌ Firebase connection failed: ${error.message}`);
+                updateStatus(`Firebase connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function uploadSampleData() {
+            log('Starting sample data upload...');
+            updateStatus('Uploading sample products...', 'info');
+            
+            try {
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const product of sampleProducts) {
+                    try {
+                        await db.collection('products').add({
+                            ...product,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        log(`✅ Added: ${product.name}`);
+                        successCount++;
+                    } catch (error) {
+                        log(`❌ Failed to add ${product.name}: ${error.message}`);
+                        errorCount++;
+                    }
+                }
+                
+                log(`\nUpload complete: ${successCount} successful, ${errorCount} failed`);
+                updateStatus(`Sample data uploaded: ${successCount} products added`, 'success');
+            } catch (error) {
+                log(`❌ Upload failed: ${error.message}`);
+                updateStatus(`Upload failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function createTestUser() {
+            log('Creating test admin user...');
+            updateStatus('Creating test admin user...', 'info');
+            
+            try {
+                // Create test user in Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    'admin@shophub.com',
+                    'admin123456'
+                );
+                
+                const user = userCredential.user;
+                
+                // Add user document to Firestore with admin role
+                await db.collection('users').doc(user.uid).set({
+                    name: 'Admin User',
+                    email: 'admin@shophub.com',
+                    role: 'admin',
+                    phone: '+1234567890',
+                    address: '123 Admin St, Admin City, AC 12345',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                log('✅ Test admin user created successfully!');
+                log('   Email: admin@shophub.com');
+                log('   Password: admin123456');
+                updateStatus('Test admin user created!', 'success');
+                
+                // Sign out the user
+                await auth.signOut();
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    log('⚠️ Admin user already exists');
+                    updateStatus('Admin user already exists', 'info');
+                } else {
+                    log(`❌ Failed to create admin user: ${error.message}`);
+                    updateStatus(`Failed to create admin user: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function checkData() {
+            log('Checking data status...');
+            updateStatus('Checking data status...', 'info');
+            
+            try {
+                // Check products
+                const productsSnapshot = await db.collection('products').get();
+                log(`📦 Products: ${productsSnapshot.size} documents`);
+                
+                if (productsSnapshot.size > 0) {
+                    const categories = new Set();
+                    productsSnapshot.forEach(doc => {
+                        categories.add(doc.data().category);
+                    });
+                    log(`📂 Categories: ${Array.from(categories).join(', ')}`);
+                }
+                
+                // Check users
+                const usersSnapshot = await db.collection('users').get();
+                log(`👥 Users: ${usersSnapshot.size} documents`);
+                
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    log(`   - ${userData.name} (${userData.email}) - Role: ${userData.role}`);
+                });
+                
+                // Check orders
+                const ordersSnapshot = await db.collection('orders').get();
+                log(`🛒 Orders: ${ordersSnapshot.size} documents`);
+                
+                updateStatus('Data check complete', 'success');
+            } catch (error) {
+                log(`❌ Data check failed: ${error.message}`);
+                updateStatus(`Data check failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        log('Firebase Setup Tool Ready');
+        updateStatus('Ready to setup Firebase. Click buttons to proceed.', 'info');
+    </script>
+</body>
+</html>

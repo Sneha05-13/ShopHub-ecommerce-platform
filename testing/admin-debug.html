@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .data-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f5f5f5; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Admin Panel Debug Tool</h1>
+        
+        <div id="status" class="status info">
+            Checking admin panel status...
+        </div>
+        
+        <div>
+            <button onclick="checkAuthStatus()">Check Authentication</button>
+            <button onclick="checkData()">Check Database Data</button>
+            <button onclick="loginAsAdmin()">Login as Admin</button>
+            <button onclick="createAdminIfNeeded()">Create Admin User</button>
+            <button onclick="testAdminAccess()">Test Admin Access</button>
+        </div>
+        
+        <div class="data-section">
+            <h3>📊 Database Status</h3>
+            <div id="data-status">Click "Check Database Data" to see current data</div>
+        </div>
+        
+        <div class="data-section">
+            <h3>👤 Authentication Status</h3>
+            <div id="auth-status">Click "Check Authentication" to see current auth status</div>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfo7mj_kEFklzaB81x9YcuMim14rnZULU",
+            authDomain: "e-commerce-app-f265d.firebaseapp.com",
+            projectId: "e-commerce-app-f265d",
+            storageBucket: "e-commerce-app-f265d.firebasestorage.app",
+            messagingSenderId: "927599274842",
+            appId: "1:927599274842:web:37ea0993336bc879d82163",
+            measurementId: "G-5KN3XX4QWX"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function checkAuthStatus() {
+            log('🔐 Checking authentication status...');
+            const authStatusDiv = document.getElementById('auth-status');
+            
+            try {
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    authStatusDiv.innerHTML = '<p style="color: red;">❌ No user is currently logged in</p>';
+                    log('❌ No user logged in');
+                    updateStatus('No user logged in', 'warning');
+                    return;
+                }
+                
+                log(`✅ User logged in: ${user.email} (UID: ${user.uid})`);
+                
+                // Check if user has admin role in Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    authStatusDiv.innerHTML = `<p style="color: orange;">⚠️ User ${user.email} exists but no Firestore document found</p>`;
+                    log('⚠️ User exists but no Firestore document');
+                    updateStatus('User exists but no Firestore document', 'warning');
+                    return;
+                }
+                
+                const userData = userDoc.data();
+                const isAdmin = userData.role === 'admin';
+                
+                authStatusDiv.innerHTML = `
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>UID:</strong> ${user.uid}</p>
+                    <p><strong>Name:</strong> ${userData.name || 'Not set'}</p>
+                    <p><strong>Role:</strong> <span style="color: ${isAdmin ? 'green' : 'red'}">${userData.role}</span></p>
+                    <p><strong>Admin Access:</strong> ${isAdmin ? '✅ Yes' : '❌ No'}</p>
+                `;
+                
+                if (isAdmin) {
+                    log('✅ User has admin privileges');
+                    updateStatus('Admin user authenticated', 'success');
+                } else {
+                    log('❌ User does not have admin privileges');
+                    updateStatus('User is not an admin', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Error checking auth: ${error.message}`);
+                authStatusDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                updateStatus('Authentication check failed', 'error');
+            }
+        }
+
+        async function checkData() {
+            log('📊 Checking database data...');
+            const dataStatusDiv = document.getElementById('data-status');
+            
+            try {
+                // Check products
+                const productsSnapshot = await db.collection('products').get();
+                const productsCount = productsSnapshot.size;
+                
+                // Check users
+                const usersSnapshot = await db.collection('users').get();
+                const usersCount = usersSnapshot.size;
+                
+                // Check orders
+                const ordersSnapshot = await db.collection('orders').get();
+                const ordersCount = ordersSnapshot.size;
+                
+                // Count admin users
+                let adminCount = 0;
+                let customerCount = 0;
+                usersSnapshot.forEach(doc => {
+                    const role = doc.data().role;
+                    if (role === 'admin') adminCount++;
+                    else if (role === 'customer') customerCount++;
+                });
+                
+                dataStatusDiv.innerHTML = `
+                    <table>
+                        <tr><th>Collection</th><th>Count</th><th>Status</th></tr>
+                        <tr><td>Products</td><td>${productsCount}</td><td>${productsCount > 0 ? '✅' : '❌'}</td></tr>
+                        <tr><td>Users</td><td>${usersCount}</td><td>${usersCount > 0 ? '✅' : '❌'}</td></tr>
+                        <tr><td> - Admins</td><td>${adminCount}</td><td>${adminCount > 0 ? '✅' : '❌'}</td></tr>
+                        <tr><td> - Customers</td><td>${customerCount}</td><td>${customerCount > 0 ? '✅' : '❌'}</td></tr>
+                        <tr><td>Orders</td><td>${ordersCount}</td><td>${ordersCount > 0 ? '✅' : '❌'}</td></tr>
+                    </table>
+                `;
+                
+                log(`✅ Data check complete: ${productsCount} products, ${usersCount} users (${adminCount} admins), ${ordersCount} orders`);
+                
+                if (ordersCount === 0) {
+                    log('⚠️ No orders found - admin panels will show errors');
+                    updateStatus('No orders found - create sample orders', 'warning');
+                } else {
+                    updateStatus('Data check complete', 'success');
+                }
+                
+            } catch (error) {
+                log(`❌ Error checking data: ${error.message}`);
+                dataStatusDiv.innerHTML = `<p style="color: red;">❌ Error: ${error.message}</p>`;
+                updateStatus('Data check failed', 'error');
+            }
+        }
+
+        async function loginAsAdmin() {
+            log('🔑 Attempting to login as admin...');
+            
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword('admin@shophub.com', 'admin123456');
+                log(`✅ Successfully logged in as ${userCredential.user.email}`);
+                updateStatus('Admin login successful', 'success');
+                
+                // Check auth status after login
+                setTimeout(checkAuthStatus, 1000);
+                
+            } catch (error) {
+                log(`❌ Login failed: ${error.message}`);
+                if (error.code === 'auth/user-not-found') {
+                    log('ℹ️ Admin user not found - need to create admin user first');
+                    updateStatus('Admin user not found', 'warning');
+                } else if (error.code === 'auth/wrong-password') {
+                    log('ℹ️ Wrong password - check admin user credentials');
+                    updateStatus('Wrong password', 'error');
+                } else {
+                    updateStatus('Login failed', 'error');
+                }
+            }
+        }
+
+        async function createAdminIfNeeded() {
+            log('👤 Creating admin user if needed...');
+            
+            try {
+                // Create admin user in Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    'admin@shophub.com',
+                    'admin123456'
+                );
+                
+                const user = userCredential.user;
+                
+                // Add user document to Firestore with admin role
+                await db.collection('users').doc(user.uid).set({
+                    name: 'Admin User',
+                    email: 'admin@shophub.com',
+                    role: 'admin',
+                    phone: '+1234567890',
+                    address: '123 Admin St, Admin City, AC 12345',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                log('✅ Admin user created successfully!');
+                log('   Email: admin@shophub.com');
+                log('   Password: admin123456');
+                updateStatus('Admin user created!', 'success');
+                
+                // Sign out and then login
+                await auth.signOut();
+                setTimeout(loginAsAdmin, 1000);
+                
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    log('ℹ️ Admin user already exists');
+                    updateStatus('Admin user already exists', 'info');
+                    // Try to login
+                    setTimeout(loginAsAdmin, 1000);
+                } else {
+                    log(`❌ Failed to create admin user: ${error.message}`);
+                    updateStatus(`Failed to create admin: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testAdminAccess() {
+            log('🧪 Testing admin panel access...');
+            
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    log('❌ No user logged in - login first');
+                    updateStatus('No user logged in', 'error');
+                    return;
+                }
+                
+                // Check admin role
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (!userDoc.exists || userDoc.data().role !== 'admin') {
+                    log('❌ User is not an admin');
+                    updateStatus('User is not an admin', 'error');
+                    return;
+                }
+                
+                log('✅ Admin access confirmed');
+                log('🔗 You can now access:');
+                log('   - Dashboard: http://localhost:8000/html/admin/dashboard.html');
+                log('   - Orders: http://localhost:8000/html/admin/orders.html');
+                log('   - Sales Reports: http://localhost:8000/html/admin/sales-reports.html');
+                
+                updateStatus('Admin access confirmed - you can visit admin panels', 'success');
+                
+            } catch (error) {
+                log(`❌ Error testing admin access: ${error.message}`);
+                updateStatus('Admin access test failed', 'error');
+            }
+        }
+
+        // Initialize
+        log('🔍 Admin Debug Tool Ready');
+        updateStatus('Ready to debug admin panel issues', 'info');
+        
+        // Auto-check on load
+        setTimeout(() => {
+            checkAuthStatus();
+            checkData();
+        }, 1000);
+    </script>
+</body>
+</html>
