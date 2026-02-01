@@ -3,8 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ShopHub</title>
+    <title>Login / Sign Up - ShopHub</title>
     <link rel="stylesheet" href="../../css/customer-style.css">
+    <style>
+        /* Clean navbar styling */
+        .navbar {
+            display: block !important;
+            background: #2c3e50 !important;
+            color: white !important;
+            padding: 1rem 0 !important;
+            position: relative !important;
+            z-index: 1000 !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        }
+        
+        .navbar .container {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 0 20px !important;
+        }
+        
+        .logo h2 {
+            color: #3498db !important;
+            display: block !important;
+            font-size: 1.8rem !important;
+            margin: 0 !important;
+        }
+        
+        .nav-links {
+            display: flex !important;
+            list-style: none !important;
+            gap: 2rem !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .nav-links li {
+            display: inline-block !important;
+            margin: 0 !important;
+        }
+        
+        .nav-links a {
+            color: white !important;
+            display: inline-block !important;
+            text-decoration: none !important;
+            padding: 0.5rem 0 !important;
+            transition: color 0.3s !important;
+        }
+        
+        .nav-links a:hover {
+            color: #3498db !important;
+        }
+        
+        /* Mobile menu styles */
+        @media (max-width: 768px) {
+            .mobile-menu-icon {
+                display: flex !important;
+                flex-direction: column !important;
+                cursor: pointer !important;
+                padding: 0.5rem !important;
+                background: rgba(255,255,255,0.1) !important;
+                border-radius: 4px !important;
+            }
+            
+            .mobile-menu-icon span {
+                width: 25px !important;
+                height: 3px !important;
+                background-color: white !important;
+                margin: 3px 0 !important;
+                transition: all 0.3s ease-in-out !important;
+                border-radius: 2px !important;
+                display: block !important;
+            }
+            
+            .mobile-menu-icon.active span:nth-child(1) {
+                transform: rotate(-45deg) translate(-5px, 6px) !important;
+            }
+            
+            .mobile-menu-icon.active span:nth-child(2) {
+                opacity: 0 !important;
+            }
+            
+            .mobile-menu-icon.active span:nth-child(3) {
+                transform: rotate(45deg) translate(-5px, -6px) !important;
+            }
+            
+            .nav-links {
+                display: none !important;
+                position: absolute !important;
+                top: 100% !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: #2c3e50 !important;
+                flex-direction: column !important;
+                padding: 1rem 0 !important;
+                z-index: 999 !important;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+                border-top: 1px solid #34495e !important;
+            }
+            
+            .nav-links.active {
+                display: flex !important;
+            }
+            
+            .nav-links li {
+                display: block !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            
+            .nav-links a {
+                display: block !important;
+                padding: 1rem 20px !important;
+                color: white !important;
+                text-decoration: none !important;
+                border-bottom: 1px solid #34495e !important;
+                font-size: 1rem !important;
+            }
+            
+            .nav-links a:hover {
+                background: #34495e !important;
+                color: #3498db !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Bar -->
