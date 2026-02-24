@@ -9,7 +9,7 @@ async function loadCart() {
     if (!cartItemsDiv) return;
 
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    
+
     if (cart.length === 0) {
         cartItemsDiv.innerHTML = `
             <div class="empty-cart">
@@ -50,7 +50,7 @@ async function loadCart() {
 // Display cart items
 function displayCartItems() {
     const cartItemsDiv = document.getElementById('cart-items');
-    
+
     if (cartItems.length === 0) {
         cartItemsDiv.innerHTML = `
             <div class="empty-cart">
@@ -63,7 +63,7 @@ function displayCartItems() {
     }
 
     cartItemsDiv.innerHTML = '';
-    
+
     cartItems.forEach(item => {
         const cartItemDiv = document.createElement('div');
         cartItemDiv.className = 'cart-item';
@@ -90,7 +90,7 @@ function updateQuantity(productId, newQuantity) {
 
     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
     const item = cart.find(i => i.id === productId);
-    
+
     if (item) {
         item.quantity = newQuantity;
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -131,7 +131,7 @@ function updateCartSummary() {
 // Handle checkout
 async function handleCheckout() {
     const user = auth.currentUser;
-    
+
     if (!user) {
         showNotification('Please login to checkout', 'error');
         setTimeout(() => {
@@ -149,7 +149,7 @@ async function handleCheckout() {
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
     let paymentDetails = { method: paymentMethod };
 
-    if (paymentMethod === 'card') {
+    if (paymentMethod === 'card' || paymentMethod === 'stripe') {
         const cardNumber = document.getElementById('card-number').value.trim();
         const cardExpiry = document.getElementById('card-expiry').value.trim();
         const cardCvv = document.getElementById('card-cvv').value.trim();
@@ -159,13 +159,14 @@ async function handleCheckout() {
             return;
         }
         paymentDetails.cardNumber = cardNumber.replace(/\s/g, '').slice(-4).padStart(16, '*'); // Mask for security
-    } else if (paymentMethod === 'netbanking') {
-        const bank = document.getElementById('bank-select').value;
-        if (!bank) {
-            showNotification('Please select your bank', 'error');
+        paymentDetails.country = document.getElementById('card-country')?.value || 'N/A';
+    } else if (paymentMethod === 'paypal') {
+        const paypalEmail = document.getElementById('paypal-email').value.trim();
+        if (!paypalEmail) {
+            showNotification('Please provide your PayPal account email', 'error');
             return;
         }
-        paymentDetails.bank = bank;
+        paymentDetails.paypalAccount = paypalEmail;
     }
 
     try {
@@ -226,13 +227,21 @@ function setupPaymentToggle() {
         radio.addEventListener('change', (e) => {
             // Remove active class from all options
             document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
-            
+
             // Add active class to current option
             e.target.closest('.payment-option').classList.add('active');
 
             // Toggle detail sections
-            cardDetails.style.display = (e.target.value === 'card') ? 'block' : 'none';
-            netbankingDetails.style.display = (e.target.value === 'netbanking') ? 'block' : 'none';
+            const val = e.target.value;
+            const cardDetails = document.getElementById('card-details');
+            const paypalDetails = document.getElementById('paypal-details');
+
+            if (cardDetails) {
+                cardDetails.style.display = (val === 'card' || val === 'stripe') ? 'block' : 'none';
+            }
+            if (paypalDetails) {
+                paypalDetails.style.display = (val === 'paypal') ? 'block' : 'none';
+            }
         });
     });
 
