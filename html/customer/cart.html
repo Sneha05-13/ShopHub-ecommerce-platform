@@ -163,22 +163,97 @@
                     <!-- Cart items will be loaded here by JavaScript -->
                 </div>
 
-                <!-- Cart Summary -->
-                <div class="cart-summary">
-                    <h3>Order Summary</h3>
-                    <div class="summary-row">
-                        <span>Subtotal:</span>
-                        <span id="cart-subtotal">$0.00</span>
+                <!-- Payment and Summary Row -->
+                <div class="payment-and-summary">
+                    <!-- Payment Section -->
+                    <div class="payment-section">
+                        <h3>Payment Method</h3>
+                        <div class="payment-options">
+                            <label class="payment-option">
+                                <input type="radio" name="payment-method" value="cod" checked>
+                                <span class="option-content">
+                                    <span class="option-icon">💵</span>
+                                    <span class="option-details">
+                                        <span class="option-title">Cash on Delivery</span>
+                                        <span class="option-desc">Pay when you receive the order</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="payment-option">
+                                <input type="radio" name="payment-method" value="card">
+                                <span class="option-content">
+                                    <span class="option-icon">💳</span>
+                                    <span class="option-details">
+                                        <span class="option-title">Credit / Debit Card</span>
+                                        <span class="option-desc">All major cards supported</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="payment-option">
+                                <input type="radio" name="payment-method" value="netbanking">
+                                <span class="option-content">
+                                    <span class="option-icon">🏦</span>
+                                    <span class="option-details">
+                                        <span class="option-title">Net Banking</span>
+                                        <span class="option-desc">Secure payment through your bank</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Card Details (Hidden by default) -->
+                        <div id="card-details" class="payment-details-container" style="display: none;">
+                            <div class="form-group">
+                                <label>Card Number</label>
+                                <input type="text" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Expiry Date</label>
+                                    <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVV</label>
+                                    <input type="password" id="card-cvv" placeholder="***" maxlength="3">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Banking Details (Hidden by default) -->
+                        <div id="netbanking-details" class="payment-details-container" style="display: none;">
+                            <div class="form-group">
+                                <label>Select Your Bank</label>
+                                <select id="bank-select">
+                                    <option value="">-- Choose a Bank --</option>
+                                    <option value="sbi">State Bank of India</option>
+                                    <option value="hdfc">HDFC Bank</option>
+                                    <option value="icici">ICICI Bank</option>
+                                    <option value="axis">Axis Bank</option>
+                                    <option value="pnb">Punjab National Bank</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="summary-row">
-                        <span>Tax (10%):</span>
-                        <span id="cart-tax">$0.00</span>
+
+                    <!-- Cart Summary -->
+                    <div class="cart-summary">
+                        <h3>Order Summary</h3>
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax (10%):</span>
+                            <span id="cart-tax">$0.00</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="cart-total">$0.00</span>
+                        </div>
+                        <button class="btn btn-primary btn-block" id="checkout-btn">Proceed to Checkout</button>
                     </div>
-                    <div class="summary-row total">
-                        <span>Total:</span>
-                        <span id="cart-total">$0.00</span>
-                    </div>
-                    <button class="btn btn-primary btn-block" id="checkout-btn">Proceed to Checkout</button>
                 </div>
             </div>
         </div>

@@ -145,6 +145,29 @@ async function handleCheckout() {
         return;
     }
 
+    // Get payment information
+    const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+    let paymentDetails = { method: paymentMethod };
+
+    if (paymentMethod === 'card') {
+        const cardNumber = document.getElementById('card-number').value.trim();
+        const cardExpiry = document.getElementById('card-expiry').value.trim();
+        const cardCvv = document.getElementById('card-cvv').value.trim();
+
+        if (!cardNumber || !cardExpiry || !cardCvv) {
+            showNotification('Please fill in all card details', 'error');
+            return;
+        }
+        paymentDetails.cardNumber = cardNumber.replace(/\s/g, '').slice(-4).padStart(16, '*'); // Mask for security
+    } else if (paymentMethod === 'netbanking') {
+        const bank = document.getElementById('bank-select').value;
+        if (!bank) {
+            showNotification('Please select your bank', 'error');
+            return;
+        }
+        paymentDetails.bank = bank;
+    }
+
     try {
         // Calculate totals
         let subtotal = 0;
@@ -167,6 +190,7 @@ async function handleCheckout() {
             subtotal: subtotal,
             tax: tax,
             total: total,
+            payment: paymentDetails,
             status: 'pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -187,9 +211,63 @@ async function handleCheckout() {
     }
 }
 
+// Handle payment method toggle
+function setupPaymentToggle() {
+    const paymentRadios = document.querySelectorAll('input[name="payment-method"]');
+    const cardDetails = document.getElementById('card-details');
+    const netbankingDetails = document.getElementById('netbanking-details');
+
+    paymentRadios.forEach(radio => {
+        // Set initial active state
+        if (radio.checked) {
+            radio.closest('.payment-option').classList.add('active');
+        }
+
+        radio.addEventListener('change', (e) => {
+            // Remove active class from all options
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to current option
+            e.target.closest('.payment-option').classList.add('active');
+
+            // Toggle detail sections
+            cardDetails.style.display = (e.target.value === 'card') ? 'block' : 'none';
+            netbankingDetails.style.display = (e.target.value === 'netbanking') ? 'block' : 'none';
+        });
+    });
+
+    // Simple formatting for card number
+    const cardNumberInput = document.getElementById('card-number');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            let formattedValue = '';
+            for (let i = 0; i < value.length; i++) {
+                if (i > 0 && i % 4 === 0) formattedValue += ' ';
+                formattedValue += value[i];
+            }
+            e.target.value = formattedValue.trim();
+        });
+    }
+
+    // Simple formatting for expiry
+    const cardExpiryInput = document.getElementById('card-expiry');
+    if (cardExpiryInput) {
+        cardExpiryInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) {
+                e.target.value = value.slice(0, 2) + '/' + value.slice(2, 4);
+            } else {
+                e.target.value = value;
+            }
+        });
+    }
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     loadCart();
+    setupPaymentToggle();
 
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) {
